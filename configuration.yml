@@ -1,5 +1,4 @@
-# Connect to AdventureWorks example data source 
-# https://go.soda.io/connect-ds
+# Connect to your data source
 data_source soda_demo:
   type: postgres
   connection:
