@@ -25,12 +25,10 @@ def run_soda_scan(project_root, scan_name, checks_subpath = None):
     if checks_subpath:
         checks_path += f"/{checks_subpath}"
 
-    data_source = "soda_demo"
-
     scan = Scan()
     scan.set_verbose()
     scan.add_configuration_yaml_file(config_file)
-    scan.set_data_source_name(data_source)
+    scan.set_data_source_name("soda_demo")
     scan.add_sodacl_yaml_files(checks_path)
     scan.set_scan_definition_name(scan_name)
 
