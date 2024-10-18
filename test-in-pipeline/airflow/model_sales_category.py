@@ -36,10 +36,12 @@ def run_soda_scan(project_root, scan_name, checks_subpath = None):
 
     result = scan.execute()
     print(scan.get_logs_text())
+    # Extract Scan results from a Python dictionary
     # r_dict = scan.get_scan_results()
 
     if result != 0:
         raise ValueError('Soda Scan failed')
+    # Additional Scan methods as circuit breakers
     # scan.assert_no_checks_fail()
     # scan.get_checks_fail
 
@@ -69,7 +71,7 @@ with DAG(
 
     dbt_transform = BashOperator(
         task_id="dbt_transform",
-        bash_command=f"cd /opt/airflow/dags/dbt && dbt run --select transform",
+        bash_command= # dbt run command,
     )
 
     soda_enforce_transformation_contract = PythonOperator(
@@ -84,7 +86,7 @@ with DAG(
 
     dbt_report = BashOperator(
         task_id="dbt_report",
-        bash_command=f"cd /opt/airflow/dags/dbt && dbt run --select report",
+        bash_command= # dbt run command,
     )
 
     soda_enforce_analytical_contract = PythonOperator(
