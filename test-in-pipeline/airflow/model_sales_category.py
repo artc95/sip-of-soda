@@ -61,7 +61,7 @@ with DAG(
         op_kwargs={
             "project_root": PROJECT_ROOT,
             "scan_name": "model_adventureworks_sales_category_ingest",
-            "checks_subpath": "ingest-checks/dim_product.yml"
+            "checks_subpath": "ingest-checks/dim_product_category.yml"
         },
     )
 
