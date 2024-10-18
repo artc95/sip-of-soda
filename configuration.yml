@@ -1,6 +1,6 @@
 # Connect to AdventureWorks example data source 
 # https://go.soda.io/connect-ds
-data_source adventureworks:
+data_source soda_demo:
   type: postgres
   connection:
     host: localhost
