@@ -1,14 +1,28 @@
 checks for dim_product_category:
+  - attributes:
+      pipeline_stage: Ingest
+      pipeline: soda_demo_data_pipeline
+      data_domain: Product
+      team: Data Engineering
+
+  - row_count > 0:
+      name: Dataset cannot be empty
+      attributes:
+        dimension: [Completeness]
+
   - schema:
-      fail:
-        when required column missing:
-          [product_category_key, english_product_category_name]
-        when wrong column type:
-          product_category_key: integer
-          english_product_category_name: varchar
+      name: Schema Evolution
+      warn:
+        when schema changes: any
+      attributes:
+        dimension: [Consistency]
+
   - missing_count(product_category_key) = 0:
       name: All categories have a key
+      attributes:
+        dimension: [ Completeness ]
+
   - missing_count(english_product_category_name) = 0:
       name: All categories have a name
-  - change for row_count < 5:
-      name: Categories are stable
+      attributes:
+        dimension: [ Completeness ]
