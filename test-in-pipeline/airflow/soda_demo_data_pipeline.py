@@ -7,7 +7,7 @@ from airflow.utils.dates import days_ago
 from datetime import timedelta
 
 default_args = {
-    "owner": "soda_core",
+    "owner": "sip_of_soda",
     "retries": 1,
     "retry_delay": timedelta(minutes=5),
 }
@@ -19,8 +19,8 @@ def run_soda_scan(project_root, scan_name, checks_subpath = None):
     from soda.scan import Scan
 
     print("Running Soda Scan ...")
-    config_file = f"{project_root}/soda/configuration.yml"
-    checks_path = f"{project_root}/soda/checks"
+    config_file = f"{project_root}/configuration.yml"
+    checks_path = f"{project_root}/soda"
 
     if checks_subpath:
         checks_path += f"/{checks_subpath}"
@@ -36,68 +36,68 @@ def run_soda_scan(project_root, scan_name, checks_subpath = None):
 
     result = scan.execute()
     print(scan.get_logs_text())
+    # r_dict = scan.get_scan_results()
 
     if result != 0:
         raise ValueError('Soda Scan failed')
+    # scan.assert_no_checks_fail()
+    # scan.get_checks_fail
 
     return result
 
 
 with DAG(
-    "model_adventureworks_sales_category",
+    "soda_demo_data_pipeline",
     default_args=default_args,
-    description="A simple Soda Core scan DAG",
+    description="A simple data pipeline example including Soda Scans for Data Testing",    
     schedule_interval=timedelta(days=1),
     start_date=days_ago(1),
 ):
-    ingest_raw_data = DummyOperator(task_id="ingest_raw_data")
+    ingest_raw_data = EmptyOperator(task_id="ingest_raw_data")
 
-    checks_ingest = PythonVirtualenvOperator(
-        task_id="checks_ingest",
+    soda_enforce_ingestion_contract = PythonOperator(
+        task_id="soda_enforce_ingestion_contract",
         python_callable=run_soda_scan,
-        requirements=["soda-core-postgres", "soda-core-scientific"],
-        system_site_packages=False,
         op_kwargs={
             "project_root": PROJECT_ROOT,
             "scan_name": "model_adventureworks_sales_category_ingest",
-            "checks_subpath": "ingest/dim_product_category.yml"
+            "checks_subpath": "ingest-checks/dim_product.yml"
         },
     )
 
+    soda_process_failing_records_ingest = EmptyOperator(task_id="soda_process_failing_records_ingest")
+
     dbt_transform = BashOperator(
         task_id="dbt_transform",
-        bash_command=f"dbt run --project-dir {PROJECT_ROOT}/dbt --select transform",
+        bash_command=f"cd /opt/airflow/dags/dbt && dbt run --select transform",
     )
 
-    checks_transform = PythonVirtualenvOperator(
-        task_id="checks_transform",
+    soda_enforce_transformation_contract = PythonOperator(
+        task_id="soda_enforce_transformation_contract",
         python_callable=run_soda_scan,
-        requirements=["soda-core-postgres", "soda-core-scientific"],
-        system_site_packages=False,
         op_kwargs={
             "project_root": PROJECT_ROOT,
             "scan_name": "model_adventureworks_sales_category_transform",
-            "checks_subpath": "transform"
+            "checks_subpath": "transform-checks/fact_product_category.yml"
         },
     )
 
     dbt_report = BashOperator(
         task_id="dbt_report",
-        bash_command=f"dbt run --project-dir {PROJECT_ROOT}/dbt --select report",
+        bash_command=f"cd /opt/airflow/dags/dbt && dbt run --select report",
     )
 
-    checks_report = PythonVirtualenvOperator(
-        task_id="checks_report",
+    soda_enforce_analytical_contract = PythonOperator(
+        task_id="soda_enforce_analytical_contract",
         python_callable=run_soda_scan,
-        requirements=["soda-core-postgres", "soda-core-scientific"],
-        system_site_packages=False,
         op_kwargs={
             "project_root": PROJECT_ROOT,
             "scan_name": "model_adventureworks_sales_category_report",
-            "checks_subpath": "report"
+            "checks_subpath": "report-checks/report_category_sales.yml"
         },
     )
 
-    publish_data = DummyOperator(task_id="publish_data")
+    # process_failing_records_report = EmptyOperator(task_id="process_failing_records_report")
+    publish_data = EmptyOperator(task_id="publish_data")
 
-    ingest_raw_data >> checks_ingest >> dbt_transform >> checks_transform >> dbt_report >> checks_report >> publish_data
+    ingest_raw_data >> soda_enforce_ingestion_contract >> soda_process_failing_records_ingest >> dbt_transform >> soda_enforce_transformation_contract  >> dbt_report >> soda_enforce_analytical_contract >> publish_data
