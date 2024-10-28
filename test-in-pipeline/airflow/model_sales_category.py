@@ -46,7 +46,7 @@ def run_soda_scan(project_root, scan_name, checks_subpath = None):
 with DAG(
     "model_adventureworks_sales_category",
     default_args=default_args,
-    description="A simple Soda Core scan DAG",
+    description="A simple Soda scan DAG",
     schedule_interval=timedelta(days=1),
     start_date=days_ago(1),
 ):
@@ -55,7 +55,7 @@ with DAG(
     checks_ingest = PythonVirtualenvOperator(
         task_id="checks_ingest",
         python_callable=run_soda_scan,
-        requirements=["soda-core-postgres", "soda-core-scientific"],
+        requirements=["-i https://pypi.cloud.soda.io", "soda-postgres", "soda-scientific"],
         system_site_packages=False,
         op_kwargs={
             "project_root": PROJECT_ROOT,
@@ -72,7 +72,7 @@ with DAG(
     checks_transform = PythonVirtualenvOperator(
         task_id="checks_transform",
         python_callable=run_soda_scan,
-        requirements=["soda-core-postgres", "soda-core-scientific"],
+        requirements=["-i https://pypi.cloud.soda.io", "soda-postgres", "soda-scientific"],
         system_site_packages=False,
         op_kwargs={
             "project_root": PROJECT_ROOT,
@@ -89,7 +89,7 @@ with DAG(
     checks_report = PythonVirtualenvOperator(
         task_id="checks_report",
         python_callable=run_soda_scan,
-        requirements=["soda-core-postgres", "soda-core-scientific"],
+        requirements=["-i https://pypi.cloud.soda.io", "soda-postgres", "soda-scientific"],
         system_site_packages=False,
         op_kwargs={
             "project_root": PROJECT_ROOT,
